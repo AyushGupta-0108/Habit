@@ -252,12 +252,13 @@ body{background:#080810;color:#e8e8f0;font-family:'Syne',sans-serif;min-height:1
 <script>
 const PALETTE=['#F59E0B','#10B981','#3B82F6','#EC4899','#8B5CF6','#EF4444','#06B6D4','#84CC16','#F97316','#A78BFA'];
 let habits=[], completions={}, tasks=[], showForm=false, showTaskForm=false, editId=null;
-  let dragSrcId = null;
-  let taskDragId = null;
+let dragSrcId = null;
+let taskDragId = null;
 let newName='', newColor=PALETTE[0], newEmoji='⚡';
 let newTaskText='', newTaskPriority='med';
-  let focusMode = false;
-  const priorityOrder = { high: 0, med: 1, low: 2 };
+let focusMode = false;
+let midnightTimer = null;
+const priorityOrder = { high: 0, med: 1, low: 2 };
 
 function sortTasks(arr){
   return [...arr].sort((a,b)=>{
@@ -267,24 +268,61 @@ function sortTasks(arr){
 
 function dk(d){return d.toISOString().split('T')[0]}
 function today(){return dk(new Date())}
-  function checkNewDay(){
-  const last = localStorage.getItem('hcx-last-date');
-  const now = today();
 
-  if(last !== now){
+// ─── MIDNIGHT RESET ENGINE ───────────────────────────────────────────────────
+// Called once on load, and re-schedules itself every midnight automatically.
+// This means the app resets correctly even if left open overnight.
+
+function scheduleMidnightReset(){
+  // Cancel any existing timer first
+  if(midnightTimer) clearTimeout(midnightTimer);
+
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0); // exactly 12:00:00 AM
+
+  const msUntilMidnight = tomorrow - now;
+
+  midnightTimer = setTimeout(function(){
     handleNewDay();
-    localStorage.setItem('hcx-last-date', now);
-  }
+    scheduleMidnightReset(); // schedule the next midnight reset
+  }, msUntilMidnight);
 }
 
 function handleNewDay(){
-  // No reset needed for habits (already date-based)
+  const prevDate = localStorage.getItem('hcx-last-date');
+  const now = today();
 
-  // Tasks automatically carry over (your logic already handles it)
-  // This function is here for future control if needed
+  // Only act if it's genuinely a new day
+  if(prevDate === now) return;
 
+  // HABITS: completions are date-keyed so they auto-"reset" — nothing to do.
+  // The new date means today's checkboxes will all appear unchecked automatically.
+
+  // TASKS: incomplete tasks carry over (already handled by daysPending logic).
+  // Completed tasks from past days stay in history — no deletion needed.
+  // We just save current state so carry-over dates are preserved correctly.
   ssave('hcx-tasks', tasks);
+
+  localStorage.setItem('hcx-last-date', now);
+
+  // Refresh the UI so "today" reflects the new date
+  setDate();
+  render();
 }
+
+function checkNewDay(){
+  const last = localStorage.getItem('hcx-last-date');
+  const now = today();
+  if(last !== now){
+    localStorage.setItem('hcx-last-date', now);
+    // No special reset needed — habit completions are date-keyed automatically,
+    // and tasks carry over via daysPending() naturally.
+  }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function getLast(n){return Array.from({length:n},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(n-1-i));return dk(d)})}
 function dayOfWeek(s){return new Date(s+'T00:00:00').getDay()}
 function dateObj(s){return new Date(s+'T00:00:00')}
@@ -306,7 +344,9 @@ async function init(){
   if(h)habits=h;
   if(c)completions=c;
   if(t)tasks=t;
-  checkNewDay();
+
+  checkNewDay();        // Handle the case where app was closed overnight
+  scheduleMidnightReset(); // Handle the case where app stays open past midnight
   setDate();
   render();
 }
@@ -405,12 +445,7 @@ function submitHabit(){
 function cancelForm(){editId=null;newName='';newColor=PALETTE[0];newEmoji='⚡';showForm=false;render()}
 
 // ===== TASK LOGIC =====
-// A task has: id, text, priority (high/med/low), createdDate, doneDate (null if pending), deleted
-// "carry-over": if a task was not done on its createdDate (or any day), it stays visible
-// until completed. We show how many days it's been pending.
-
 function getPendingTasks(){
-  const tod=today();
   return tasks.filter(t=>!t.deleted && !t.doneDate);
 }
 function getDoneToday(){
@@ -433,7 +468,6 @@ function toggleTask(id){
   tasks=tasks.map(t=>{
     if(t.id!==id)return t;
     if(t.doneDate){
-      // un-complete
       return {...t,doneDate:null};
     } else {
       return {...t,doneDate:tod};
@@ -467,7 +501,6 @@ function submitTask(){
 
 function setPriority(p){
   newTaskPriority=p;
-  // re-render priority buttons only
   const wrap=document.getElementById('priorityBtns');
   if(wrap){
     ['high','med','low'].forEach(pr=>{
@@ -486,7 +519,6 @@ function render(){
   const pct=habits.length?Math.round(done/habits.length*100):0;
   document.getElementById('hdrRing').innerHTML=ringSVG(pct,'#F59E0B',58);
 
-  // Task badge
   const pending=getPendingTasks();
   const badge=document.getElementById('tasksBadge');
   if(pending.length>0){badge.style.display='';badge.textContent=pending.length}
@@ -562,7 +594,6 @@ function renderToday(){
 function updateColors(){
   const dots = document.querySelectorAll('.color-dot');
   if(!dots.length) return;
-
   dots.forEach((d,i)=>{
     d.classList.toggle('sel', PALETTE[i] === newColor);
   });
@@ -572,9 +603,9 @@ function updateColors(){
 function renderTasks(){
   const tod = today();
   
-const todayTasks = sortTasks(tasks.filter(t => !t.deleted && !t.doneDate && t.createdDate === tod));
-const carriedTasks = sortTasks(tasks.filter(t => !t.deleted && !t.doneDate && t.createdDate !== tod));
-const doneToday = sortTasks(tasks.filter(t => !t.deleted && t.doneDate === tod));
+  const todayTasks = sortTasks(tasks.filter(t => !t.deleted && !t.doneDate && t.createdDate === tod));
+  const carriedTasks = sortTasks(tasks.filter(t => !t.deleted && !t.doneDate && t.createdDate !== tod));
+  const doneToday = sortTasks(tasks.filter(t => !t.deleted && t.doneDate === tod));
 
   // Summary
   document.getElementById('tasksSummary').innerHTML=`
@@ -591,14 +622,13 @@ const doneToday = sortTasks(tasks.filter(t => !t.deleted && t.doneDate === tod))
         <div class="tasks-sum-num" style="color:var(--green)">${doneToday.length}</div>
         <div class="tasks-sum-label">Done Today</div>
       </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <button class="btn-secondary" onclick="toggleFocusMode()">
+        ${focusMode ? 'Show All Tasks' : 'Focus Mode (High Only)'}
+      </button>
     </div>`;
-document.getElementById('tasksSummary').innerHTML += `
-  <div style="margin-bottom:10px">
-    <button class="btn-secondary" onclick="toggleFocusMode()">
-      ${focusMode ? 'Show All Tasks' : 'Focus Mode (High Only)'}
-    </button>
-  </div>
-`;
+
   // Form
   let formHTML='';
   if(showTaskForm){
@@ -609,9 +639,9 @@ document.getElementById('tasksSummary').innerHTML += `
       </div>
       <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:7px">PRIORITY</div>
       <div class="priority-selector" id="priorityBtns">
-        <button class="pri-btn ${newTaskPriority==='high'?'sel-high':'unsel'}" onclick="setPriority('high')">⚡ HIGH</button>
-        <button class="pri-btn ${newTaskPriority==='med'?'sel-med':'unsel'}" onclick="setPriority('med')">· MED</button>
-        <button class="pri-btn ${newTaskPriority==='low'?'sel-low':'unsel'}" onclick="setPriority('low')">↓ LOW</button>
+        <button class="pri-btn ${newTaskPriority==='high'?'sel-high':'unsel'}" data-pri="high" onclick="setPriority('high')">⚡ HIGH</button>
+        <button class="pri-btn ${newTaskPriority==='med'?'sel-med':'unsel'}" data-pri="med" onclick="setPriority('med')">· MED</button>
+        <button class="pri-btn ${newTaskPriority==='low'?'sel-low':'unsel'}" data-pri="low" onclick="setPriority('low')">↓ LOW</button>
       </div>
       <div class="form-btns">
         <button class="btn-secondary" onclick="cancelTaskForm()">Cancel</button>
@@ -623,50 +653,40 @@ document.getElementById('tasksSummary').innerHTML += `
 
   let html='';
 
-  // 🔥 TODAY TASKS
   if(todayTasks.length){
     html+=`<div class="task-section-label">🔥 Today</div>`;
-    html+=todayTasks
-  .filter(t => !focusMode || t.priority==='high')
-  .map(t=>taskItemHTML(t)).join('');
+    html+=todayTasks.filter(t => !focusMode || t.priority==='high').map(t=>taskItemHTML(t)).join('');
   }
 
-  // ↩ CARRIED TASKS
   if(carriedTasks.length){
     html+=`<div class="task-section-label">↩ Carried Over</div>`;
-  html+=carriedTasks
-  .filter(t => !focusMode || t.priority==='high')
-  .map(t=>taskItemHTML(t)).join('');
+    html+=carriedTasks.filter(t => !focusMode || t.priority==='high').map(t=>taskItemHTML(t)).join('');
   }
 
-  // ✅ DONE TODAY
   if(doneToday.length){
     html+=`<div class="task-section-label">✅ Completed Today</div>`;
- html+=doneToday
-  .filter(t => !focusMode || t.priority==='high')
-  .map(t=>taskItemHTML(t)).join('');
+    html+=doneToday.filter(t => !focusMode || t.priority==='high').map(t=>taskItemHTML(t)).join('');
   }
 
- if(!html){
-  if(focusMode){
-    html=`<div class="empty"><div style="font-size:36px;margin-bottom:8px">🎯</div>No high priority tasks</div>`;
-  } else {
-    html=`<div class="empty"><div style="font-size:36px;margin-bottom:8px">✅</div>No tasks — you're clear.</div>`;
+  if(!html){
+    if(focusMode){
+      html=`<div class="empty"><div style="font-size:36px;margin-bottom:8px">🎯</div>No high priority tasks</div>`;
+    } else {
+      html=`<div class="empty"><div style="font-size:36px;margin-bottom:8px">✅</div>No tasks — you're clear.</div>`;
+    }
   }
-}
 
   document.getElementById('taskList').innerHTML=html;
 }
    
-function taskItemHTML(t, forceDone=false){
+function taskItemHTML(t){
   const isDone=!!t.doneDate;
   const days=daysPending(t);
   const isCarried=!isDone&&days>0;
   const priLabel={high:'⚡ HIGH',med:'· MED',low:'↓ LOW'}[t.priority];
   const priClass={high:'priority-tag-high',med:'priority-tag-med',low:'priority-tag-low'}[t.priority];
 
-  
- return `<div class="task-item${isDone?' task-done':''}${isCarried?' task-carried':''}"
+  return `<div class="task-item${isDone?' task-done':''}${isCarried?' task-carried':''}"
   draggable="true"
   ondragstart="onTaskDragStart(event,'${t.id}')"
   ondragover="event.preventDefault()"
@@ -774,7 +794,6 @@ function renderAnalytics(){
   insights.push(`You perform best on <strong>${dayNames[bestDay]}s</strong> (${dayScores[bestDay]}% avg) and tend to slip on <strong>${dayNames[worstDay]}s</strong> (${dayScores[worstDay]}% avg).`);
   if(maxStreak>0)insights.push(`Your current best streak is <strong>${maxStreak} days</strong>. ${maxStreak>=7?'Incredible discipline! 🔥':'Keep the chain going!'}`);
 
-  // Task stats
   const totalTasks=tasks.filter(t=>!t.deleted).length;
   const doneTasks=tasks.filter(t=>!t.deleted&&t.doneDate).length;
   const pendingTasks=getPendingTasks().length;
@@ -867,92 +886,55 @@ function renderAnalytics(){
 
 init();
 
-if("Notification" in window){
-  Notification.requestPermission().then(permission=>{
-    if(permission === "granted"){
-      setDailyReminder();
-    } else {
-      console.log("Notifications not allowed");
-    }
-  }).catch(()=>{});
-}
-  
-  function onDragStart(e, id){
-  dragSrcId = id;
-}
-
-function onDragOver(e){
-  e.preventDefault(); // REQUIRED
-}
-
+// ── DRAG & DROP ──────────────────────────────────────────────────────────────
+function onDragStart(e, id){ dragSrcId = id; }
+function onDragOver(e){ e.preventDefault(); }
 function onDrop(e, targetId){
   e.preventDefault();
-
   if(!dragSrcId || dragSrcId === targetId) return;
-
   const fromIndex = habits.findIndex(h => h.id === dragSrcId);
   const toIndex = habits.findIndex(h => h.id === targetId);
-
   if(fromIndex === -1 || toIndex === -1) return;
-
   const moved = habits.splice(fromIndex, 1)[0];
   habits.splice(toIndex, 0, moved);
-
   dragSrcId = null;
-
   ssave('hcx-habits', habits);
   render();
 }
-  function onTaskDragStart(e, id){
-  taskDragId = id;
-}
-
+function onTaskDragStart(e, id){ taskDragId = id; }
 function onTaskDrop(e, targetId){
   e.preventDefault();
-
   if(!taskDragId || taskDragId === targetId) return;
-
   const from = tasks.findIndex(t => t.id === taskDragId);
   const to = tasks.findIndex(t => t.id === targetId);
-
   if(from === -1 || to === -1) return;
-
   const moved = tasks.splice(from,1)[0];
   tasks.splice(to,0,moved);
-
   taskDragId = null;
-
   ssave('hcx-tasks', tasks);
   render();
 }
-  function toggleFocusMode(){
-  focusMode = !focusMode;
-  render();
+
+function toggleFocusMode(){ focusMode = !focusMode; render(); }
+
+// ── NOTIFICATIONS ────────────────────────────────────────────────────────────
+if("Notification" in window){
+  Notification.requestPermission().then(permission=>{
+    if(permission === "granted") setDailyReminder();
+  }).catch(()=>{});
 }
-  function setDailyReminder(){
+
+function setDailyReminder(){
   const now = new Date();
   const target = new Date();
-  
-  target.setHours(21); // 9 PM
-  target.setMinutes(0);
-  target.setSeconds(0);
-
-  if(now > target){
-    target.setDate(target.getDate() + 1);
-  }
-
- 
-  
-
+  target.setHours(21, 0, 0, 0); // 9 PM
+  if(now > target) target.setDate(target.getDate() + 1);
   const delay = target - now;
-
   setTimeout(()=>{
     if(Notification.permission === "granted"){
-      new Notification("Habit Codex",{
-        body:"Check your habits & tasks now.",
-      });
+      new Notification("Habit Codex",{ body:"Check your habits & tasks now." });
     }
-    setDailyReminder(); // loop daily
+    setDailyReminder();
   }, delay);
 }
 </script>
