@@ -52,6 +52,13 @@ body{background:#080810;color:#e8e8f0;font-family:'Syne',sans-serif;min-height:1
 .hcheck.done{color:#000;font-weight:900}
 .habit-name{font-family:'Syne',sans-serif;font-weight:600;font-size:14px;transition:all .3s}
 .habit-name.done{color:var(--text3);text-decoration:line-through}
+  .habit-card[draggable="true"]{
+  cursor: grab;
+}
+.habit-card:active{
+  cursor: grabbing;
+  opacity: 0.6;
+}
 .habit-meta{display:flex;gap:10px;align-items:center;margin-top:5px;flex-wrap:wrap}
 .streak-badge{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600}
 .rate-text{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)}
@@ -245,6 +252,7 @@ body{background:#080810;color:#e8e8f0;font-family:'Syne',sans-serif;min-height:1
 <script>
 const PALETTE=['#F59E0B','#10B981','#3B82F6','#EC4899','#8B5CF6','#EF4444','#06B6D4','#84CC16','#F97316','#A78BFA'];
 let habits=[], completions={}, tasks=[], showForm=false, showTaskForm=false, editId=null;
+  let dragSrcId = null;
 let newName='', newColor=PALETTE[0], newEmoji='⚡';
 let newTaskText='', newTaskPriority='med';
 
@@ -487,7 +495,12 @@ function renderToday(){
     const r30=rate(h.id,last30);
     const trendData=getLast(14).map(d=>completions[d]?.[h.id]?1:0);
     const bg=isDone?`linear-gradient(135deg,rgba(${hexRgb(h.color)},.09) 0%,rgba(255,255,255,.01) 100%)`:'rgba(255,255,255,0.025)';
-    return `<div class="habit-card${isDone?' done':''}" style="background:${bg};border-color:${isDone?h.color:'transparent'}">
+   return `<div class="habit-card${isDone?' done':''}"
+  draggable="true"
+  ondragstart="onDragStart(event, '${h.id}')"
+  ondragover="onDragOver(event)"
+  ondrop="onDrop(event, '${h.id}')"
+  style="background:${bg};border-color:${isDone?h.color:'transparent'}">
       <div class="hcheck${isDone?' done':''}" style="border-color:${isDone?h.color:'rgba(255,255,255,.18)'};background:${isDone?h.color:'transparent'}" onclick="toggle('${h.id}')">
         ${isDone?'✓':''}
       </div>
@@ -808,6 +821,28 @@ function renderAnalytics(){
 }
 
 init();
+  function onDragStart(e, id){
+  dragSrcId = id;
+}
+
+function onDragOver(e){
+  e.preventDefault(); // REQUIRED
+}
+
+function onDrop(e, targetId){
+  e.preventDefault();
+
+  if(dragSrcId === targetId) return;
+
+  const fromIndex = habits.findIndex(h => h.id === dragSrcId);
+  const toIndex = habits.findIndex(h => h.id === targetId);
+
+  const moved = habits.splice(fromIndex, 1)[0];
+  habits.splice(toIndex, 0, moved);
+
+  ssave('hcx-habits', habits);
+  render();
+}
 </script>
 </body>
 </html>
