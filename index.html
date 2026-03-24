@@ -5,7 +5,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#080810;color:#e8e8f0;font-family:'Syne',sans-serif;min-height:100vh;padding:0 0 60px}
+body{background:#080810;color:#e8e8f0;font-family:'Syne',sans-serif;min-height:100vh;padding:0 0 80px}
 :root{
   --gold:#F59E0B;--gold2:rgba(245,158,11,.15);--gold3:rgba(245,158,11,.08);
   --surface:#111118;--surface2:rgba(255,255,255,.04);--surface3:rgba(255,255,255,.02);
@@ -21,8 +21,10 @@ body{background:#080810;color:#e8e8f0;font-family:'Syne',sans-serif;min-height:1
 .tabs{display:flex;padding:16px 20px 0;gap:5px}
 .tab{flex:1;padding:9px 0;background:var(--surface2);border:1px solid var(--border);border-radius:9px;
   color:var(--text3);font-family:'Syne',sans-serif;font-weight:600;font-size:12px;cursor:pointer;
-  transition:all .2s;letter-spacing:.5px}
+  transition:all .2s;letter-spacing:.5px;position:relative}
 .tab.active{background:var(--gold2);border-color:rgba(245,158,11,.4);color:var(--gold)}
+.tab-badge{position:absolute;top:-5px;right:-3px;background:var(--red);color:#fff;border-radius:99px;
+  font-size:9px;font-weight:700;padding:1px 5px;font-family:'JetBrains Mono',monospace;line-height:1.4}
 /* Views */
 .view{padding:16px 20px;display:none}
 .view.active{display:block}
@@ -129,6 +131,56 @@ body{background:#080810;color:#e8e8f0;font-family:'Syne',sans-serif;min-height:1
 /* Insights */
 .insight{background:rgba(245,158,11,.06);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;
   padding:8px 12px;margin-top:8px;font-size:12px;color:var(--text2);line-height:1.5}
+
+/* ===== TASK STYLES ===== */
+.task-section-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--text3);padding:6px 0 8px;display:flex;align-items:center;gap:8px}
+.task-section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.task-item{border-radius:11px;padding:11px 13px;margin-bottom:7px;display:flex;
+  align-items:flex-start;gap:11px;border:1px solid var(--border2);background:rgba(255,255,255,.025);
+  transition:all .3s;position:relative;overflow:hidden}
+.task-item.task-done{border-color:rgba(16,185,129,.25);background:rgba(16,185,129,.04)}
+.task-item.task-carried{border-color:rgba(245,158,11,.25);background:rgba(245,158,11,.04)}
+.task-item.task-done .task-text{text-decoration:line-through;color:var(--text3)}
+
+.tcheck{width:22px;height:22px;border-radius:6px;border:2px solid rgba(255,255,255,.2);background:transparent;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;
+  font-weight:900;color:#000;transition:all .25s;flex-shrink:0;margin-top:1px}
+.tcheck.done{background:var(--green);border-color:var(--green)}
+
+.task-text{font-family:'Syne',sans-serif;font-weight:600;font-size:13px;line-height:1.4;flex:1;color:var(--text1)}
+.task-meta-row{display:flex;gap:7px;align-items:center;margin-top:4px;flex-wrap:wrap}
+.task-tag{font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 7px;border-radius:4px;
+  font-weight:600;letter-spacing:.5px}
+.carried-badge{background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.3)}
+.carried-days{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25)}
+.priority-tag-high{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.priority-tag-med{background:rgba(245,158,11,.1);color:var(--gold);border:1px solid rgba(245,158,11,.2)}
+.priority-tag-low{background:rgba(255,255,255,.06);color:var(--text3);border:1px solid var(--border)}
+.task-date-created{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3)}
+
+.task-add-form{background:var(--surface);border:1px solid rgba(59,130,246,.25);border-radius:14px;
+  padding:16px;margin-bottom:12px;animation:slideDown .25s ease}
+.priority-selector{display:flex;gap:6px;margin-bottom:12px}
+.pri-btn{flex:1;padding:7px 0;border-radius:7px;font-family:'JetBrains Mono',monospace;font-size:11px;
+  font-weight:700;cursor:pointer;border:1.5px solid transparent;transition:all .2s;letter-spacing:.5px}
+.pri-btn.sel-high{background:rgba(239,68,68,.15);border-color:var(--red);color:var(--red)}
+.pri-btn.sel-med{background:rgba(245,158,11,.15);border-color:var(--gold);color:var(--gold)}
+.pri-btn.sel-low{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15);color:var(--text2)}
+.pri-btn.unsel{background:rgba(255,255,255,.03);border-color:var(--border2);color:var(--text3)}
+
+.tasks-summary-bar{display:flex;gap:10px;margin-bottom:14px}
+.tasks-sum-pill{flex:1;padding:10px 12px;border-radius:10px;text-align:center;border:1px solid var(--border2)}
+.tasks-sum-num{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:18px}
+.tasks-sum-label{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+
+.task-actions{display:flex;gap:2px;flex-shrink:0;margin-top:1px}
+
+/* Carried over pill animation */
+@keyframes pulseGold{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}50%{box-shadow:0 0 0 4px rgba(245,158,11,.15)}}
+.task-item.task-carried{animation:pulseGold 3s ease-in-out infinite}
 </style>
 </head>
 <body>
@@ -143,6 +195,7 @@ body{background:#080810;color:#e8e8f0;font-family:'Syne',sans-serif;min-height:1
 
 <div class="tabs">
   <button class="tab active" onclick="switchTab('today')">Today</button>
+  <button class="tab" onclick="switchTab('tasks')">Tasks <span class="tab-badge" id="tasksBadge" style="display:none"></span></button>
   <button class="tab" onclick="switchTab('week')">Week</button>
   <button class="tab" onclick="switchTab('analytics')">Analytics</button>
 </div>
@@ -158,6 +211,20 @@ body{background:#080810;color:#e8e8f0;font-family:'Syne',sans-serif;min-height:1
   </div>
   <div id="addFormWrap"></div>
   <div id="habitList"></div>
+</div>
+
+<!-- TASKS -->
+<div class="view" id="view-tasks">
+  <div class="sec-hdr">
+    <div>
+      <div class="sec-title">Daily Tasks</div>
+      <div class="sec-sub" id="tasksSub">One-time to-dos · carry over if missed</div>
+    </div>
+    <button class="btn-primary" onclick="toggleTaskForm()">+ Add</button>
+  </div>
+  <div id="taskFormWrap"></div>
+  <div id="tasksSummary"></div>
+  <div id="taskList"></div>
 </div>
 
 <!-- WEEK -->
@@ -177,9 +244,9 @@ body{background:#080810;color:#e8e8f0;font-family:'Syne',sans-serif;min-height:1
 
 <script>
 const PALETTE=['#F59E0B','#10B981','#3B82F6','#EC4899','#8B5CF6','#EF4444','#06B6D4','#84CC16','#F97316','#A78BFA'];
-const EMOJIS=['⚡','💪','📚','🧘','🏃','💧','🥗','😴','🎯','✍️','🎸','💻'];
-let habits=[], completions={}, showForm=false, editId=null;
+let habits=[], completions={}, tasks=[], showForm=false, showTaskForm=false, editId=null;
 let newName='', newColor=PALETTE[0], newEmoji='⚡';
+let newTaskText='', newTaskPriority='med';
 
 function dk(d){return d.toISOString().split('T')[0]}
 function today(){return dk(new Date())}
@@ -187,26 +254,16 @@ function getLast(n){return Array.from({length:n},(_,i)=>{const d=new Date();d.se
 function dayOfWeek(s){return new Date(s+'T00:00:00').getDay()}
 function dateObj(s){return new Date(s+'T00:00:00')}
 
-// Storage
-function sload(k){
-  try {
-    const r = localStorage.getItem(k);
-    return r ? JSON.parse(r) : null;
-  } catch {
-    return null;
-  }
-}
+function sload(k){try{const r=localStorage.getItem(k);return r?JSON.parse(r):null}catch{return null}}
+function ssave(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
 
-function ssave(k, v){
-  try {
-    localStorage.setItem(k, JSON.stringify(v));
-  } catch {}
-}
 async function init(){
-  const h=await sload('hcx-habits');
-  const c=await sload('hcx-completions');
+  const h=sload('hcx-habits');
+  const c=sload('hcx-completions');
+  const t=sload('hcx-tasks');
   if(h)habits=h;
   if(c)completions=c;
+  if(t)tasks=t;
   setDate();
   render();
 }
@@ -219,7 +276,7 @@ function setDate(){
 }
 
 function switchTab(t){
-  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',['today','week','analytics'][i]===t));
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',['today','tasks','week','analytics'][i]===t));
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+t).classList.add('active');
   render();
@@ -228,7 +285,7 @@ function switchTab(t){
 function activeTab(){
   const active=document.querySelector('.tab.active');
   const tabs=document.querySelectorAll('.tab');
-  for(let i=0;i<tabs.length;i++)if(tabs[i]===active)return['today','week','analytics'][i];
+  for(let i=0;i<tabs.length;i++)if(tabs[i]===active)return['today','tasks','week','analytics'][i];
   return 'today';
 }
 
@@ -247,7 +304,6 @@ function calcLongest(hid){
   return max;
 }
 function rate(hid,days){return days.length?Math.round(days.filter(d=>completions[d]?.[hid]).length/days.length*100):0}
-
 function hexRgb(hex){const r=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);return r?`${parseInt(r[1],16)},${parseInt(r[2],16)},${parseInt(r[3],16)}`:'255,255,255'}
 
 // Ring SVG
@@ -263,7 +319,6 @@ function ringSVG(pct,color,size=60){
   </svg>`;
 }
 
-// Sparkline SVG
 function sparkSVG(data,color,w=64,h=22){
   if(!data.length)return'';
   const max=Math.max(...data,1);
@@ -275,7 +330,6 @@ function sparkSVG(data,color,w=64,h=22){
   </svg>`;
 }
 
-// Heatbar
 function heatbarHTML(hid,days,color){
   return '<div class="heatbar">'+days.map(d=>`<div class="heatcell" style="background:${completions[d]?.[hid]?color:'rgba(255,255,255,0.06)'}" title="${d}"></div>`).join('')+'</div>';
 }
@@ -307,25 +361,105 @@ function submitHabit(){
 }
 function cancelForm(){editId=null;newName='';newColor=PALETTE[0];newEmoji='⚡';showForm=false;render()}
 
+// ===== TASK LOGIC =====
+// A task has: id, text, priority (high/med/low), createdDate, doneDate (null if pending), deleted
+// "carry-over": if a task was not done on its createdDate (or any day), it stays visible
+// until completed. We show how many days it's been pending.
+
+function getPendingTasks(){
+  const tod=today();
+  return tasks.filter(t=>!t.deleted && !t.doneDate);
+}
+function getDoneToday(){
+  const tod=today();
+  return tasks.filter(t=>!t.deleted && t.doneDate===tod);
+}
+function getDonePast(){
+  const tod=today();
+  return tasks.filter(t=>!t.deleted && t.doneDate && t.doneDate!==tod);
+}
+
+function daysPending(task){
+  const created=dateObj(task.createdDate);
+  const now=dateObj(today());
+  return Math.floor((now-created)/864e5);
+}
+
+function toggleTask(id){
+  const tod=today();
+  tasks=tasks.map(t=>{
+    if(t.id!==id)return t;
+    if(t.doneDate){
+      // un-complete
+      return {...t,doneDate:null};
+    } else {
+      return {...t,doneDate:tod};
+    }
+  });
+  ssave('hcx-tasks',tasks);
+  render();
+}
+
+function deleteTask(id){
+  tasks=tasks.map(t=>t.id===id?{...t,deleted:true}:t);
+  ssave('hcx-tasks',tasks);
+  render();
+}
+
+function toggleTaskForm(){
+  showTaskForm=!showTaskForm;
+  render();
+  if(showTaskForm)setTimeout(()=>{const inp=document.getElementById('taskInp');if(inp)inp.focus()},50);
+}
+
+function cancelTaskForm(){showTaskForm=false;newTaskText='';newTaskPriority='med';render()}
+
+function submitTask(){
+  const n=newTaskText.trim();if(!n)return;
+  tasks.push({id:Date.now()+'',text:n,priority:newTaskPriority,createdDate:today(),doneDate:null,deleted:false});
+  newTaskText='';newTaskPriority='med';showTaskForm=false;
+  ssave('hcx-tasks',tasks);
+  render();
+}
+
+function setPriority(p){
+  newTaskPriority=p;
+  // re-render priority buttons only
+  const wrap=document.getElementById('priorityBtns');
+  if(wrap){
+    ['high','med','low'].forEach(pr=>{
+      const btn=wrap.querySelector(`[data-pri="${pr}"]`);
+      if(btn){
+        btn.className=`pri-btn ${newTaskPriority===pr?'sel-'+pr:'unsel'}`;
+      }
+    });
+  }
+}
+
 function render(){
   const tab=activeTab();
-  // Header ring
-  const tod=today(),done=habits.filter(h=>completions[tod]?.[h.id]).length;
+  const tod=today();
+  const done=habits.filter(h=>completions[tod]?.[h.id]).length;
   const pct=habits.length?Math.round(done/habits.length*100):0;
-  document.getElementById('hdrRing').innerHTML=ringSDG_small(pct,'#F59E0B',58);
+  document.getElementById('hdrRing').innerHTML=ringSVG(pct,'#F59E0B',58);
+
+  // Task badge
+  const pending=getPendingTasks();
+  const badge=document.getElementById('tasksBadge');
+  if(pending.length>0){badge.style.display='';badge.textContent=pending.length}
+  else{badge.style.display='none'}
+
   if(tab==='today')renderToday();
+  else if(tab==='tasks')renderTasks();
   else if(tab==='week')renderWeek();
   else renderAnalytics();
 }
-
-function ringSDG_small(pct,color,size){return ringSVG(pct,color,size)}
 
 function renderToday(){
   const tod=today(),last30=getLast(30);
   const done=habits.filter(h=>completions[tod]?.[h.id]).length;
   document.getElementById('todaySub').textContent=`${done} / ${habits.length} completed`;
 
-  // Add form
   let formHTML='';
   if(showForm){
     formHTML=`<div class="add-form">
@@ -343,7 +477,6 @@ function renderToday(){
   }
   document.getElementById('addFormWrap').innerHTML=formHTML;
 
-  // Habits
   if(!habits.length){
     document.getElementById('habitList').innerHTML=`<div class="empty"><div style="font-size:36px;margin-bottom:8px">🌱</div>No habits yet — start your codex!</div>`;
     return;
@@ -354,7 +487,7 @@ function renderToday(){
     const r30=rate(h.id,last30);
     const trendData=getLast(14).map(d=>completions[d]?.[h.id]?1:0);
     const bg=isDone?`linear-gradient(135deg,rgba(${hexRgb(h.color)},.09) 0%,rgba(255,255,255,.01) 100%)`:'rgba(255,255,255,0.025)';
-    return `<div class="habit-card${isDone?' done':''}" style="background:${bg};border-color:${isDone?h.color:'transparent'}" data-hid="${h.id}">
+    return `<div class="habit-card${isDone?' done':''}" style="background:${bg};border-color:${isDone?h.color:'transparent'}">
       <div class="hcheck${isDone?' done':''}" style="border-color:${isDone?h.color:'rgba(255,255,255,.18)'};background:${isDone?h.color:'transparent'}" onclick="toggle('${h.id}')">
         ${isDone?'✓':''}
       </div>
@@ -380,6 +513,120 @@ function renderToday(){
 
 function updateColors(){
   document.querySelectorAll('.color-dot').forEach((d,i)=>d.classList.toggle('sel',PALETTE[i]===newColor));
+}
+
+// ===== RENDER TASKS =====
+function renderTasks(){
+  const pending=getPendingTasks();
+  const doneToday=getDoneToday();
+  const donePast=getDonePast();
+
+  // Summary bar
+  const totalOpen=pending.length;
+  const carried=pending.filter(t=>daysPending(t)>0).length;
+  const completedToday=doneToday.length;
+  document.getElementById('tasksSummary').innerHTML=`
+    <div class="tasks-summary-bar">
+      <div class="tasks-sum-pill" style="background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.15)">
+        <div class="tasks-sum-num" style="color:var(--red)">${totalOpen}</div>
+        <div class="tasks-sum-label">Pending</div>
+      </div>
+      <div class="tasks-sum-pill" style="background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.15)">
+        <div class="tasks-sum-num" style="color:var(--gold)">${carried}</div>
+        <div class="tasks-sum-label">Carried Over</div>
+      </div>
+      <div class="tasks-sum-pill" style="background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.15)">
+        <div class="tasks-sum-num" style="color:var(--green)">${completedToday}</div>
+        <div class="tasks-sum-label">Done Today</div>
+      </div>
+    </div>`;
+
+  // Task form
+  let formHTML='';
+  if(showTaskForm){
+    formHTML=`<div class="task-add-form">
+      <div style="font-weight:700;font-size:14px;margin-bottom:12px;color:var(--text1)">New Task</div>
+      <div class="form-row" style="margin-bottom:10px">
+        <input class="inp" id="taskInp" value="${newTaskText}" placeholder="What needs to get done..." oninput="newTaskText=this.value" onkeydown="if(event.key==='Enter')submitTask()">
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:7px;letter-spacing:.5px">PRIORITY</div>
+      <div class="priority-selector" id="priorityBtns">
+        <button class="pri-btn ${newTaskPriority==='high'?'sel-high':'unsel'}" data-pri="high" onclick="setPriority('high')">⚡ HIGH</button>
+        <button class="pri-btn ${newTaskPriority==='med'?'sel-med':'unsel'}" data-pri="med" onclick="setPriority('med')">· MED</button>
+        <button class="pri-btn ${newTaskPriority==='low'?'sel-low':'unsel'}" data-pri="low" onclick="setPriority('low')">↓ LOW</button>
+      </div>
+      <div class="form-btns">
+        <button class="btn-secondary" onclick="cancelTaskForm()">Cancel</button>
+        <button class="btn-primary" onclick="submitTask()">Add Task</button>
+      </div>
+    </div>`;
+  }
+  document.getElementById('taskFormWrap').innerHTML=formHTML;
+
+  let html='';
+
+  // Pending tasks — sort: high > med > low, then by carried days desc
+  const priOrder={high:0,med:1,low:2};
+  const sortedPending=[...pending].sort((a,b)=>{
+    if(priOrder[a.priority]!==priOrder[b.priority])return priOrder[a.priority]-priOrder[b.priority];
+    return daysPending(b)-daysPending(a);
+  });
+
+  if(!sortedPending.length&&!doneToday.length){
+    html=`<div class="empty"><div style="font-size:36px;margin-bottom:8px">✅</div>No pending tasks — add something to do!</div>`;
+  } else {
+    // HIGH priority
+    const highs=sortedPending.filter(t=>t.priority==='high');
+    const meds=sortedPending.filter(t=>t.priority==='med');
+    const lows=sortedPending.filter(t=>t.priority==='low');
+
+    if(highs.length){
+      html+=`<div class="task-section-label">⚡ High Priority</div>`;
+      html+=highs.map(t=>taskItemHTML(t)).join('');
+    }
+    if(meds.length){
+      html+=`<div class="task-section-label">· Medium</div>`;
+      html+=meds.map(t=>taskItemHTML(t)).join('');
+    }
+    if(lows.length){
+      html+=`<div class="task-section-label">↓ Low Priority</div>`;
+      html+=lows.map(t=>taskItemHTML(t)).join('');
+    }
+
+    // Done today
+    if(doneToday.length){
+      html+=`<div class="task-section-label" style="margin-top:10px">✓ Completed Today</div>`;
+      html+=doneToday.map(t=>taskItemHTML(t,true)).join('');
+    }
+  }
+
+  document.getElementById('taskList').innerHTML=html;
+}
+
+function taskItemHTML(t, forceDone=false){
+  const isDone=!!t.doneDate;
+  const days=daysPending(t);
+  const isCarried=!isDone&&days>0;
+  const priLabel={high:'⚡ HIGH',med:'· MED',low:'↓ LOW'}[t.priority];
+  const priClass={high:'priority-tag-high',med:'priority-tag-med',low:'priority-tag-low'}[t.priority];
+
+  const escapedText=t.text.replace(/'/g,"&#39;");
+
+  return `<div class="task-item${isDone?' task-done':''}${isCarried?' task-carried':''}">
+    <div class="tcheck${isDone?' done':''}" onclick="toggleTask('${t.id}')">${isDone?'✓':''}</div>
+    <div style="flex:1;min-width:0">
+      <div class="task-text">${t.text}</div>
+      <div class="task-meta-row">
+        <span class="task-tag ${priClass}">${priLabel}</span>
+        ${isCarried&&days>0?`<span class="task-tag carried-badge">↩ Carried over</span><span class="task-tag carried-days">${days}d pending</span>`:''}
+        ${isDone?`<span class="task-tag" style="background:rgba(16,185,129,.12);color:var(--green);border:1px solid rgba(16,185,129,.25)">✓ Done</span>`:''}
+        <span class="task-date-created">Added ${t.createdDate===today()?'today':t.createdDate.slice(5)}</span>
+      </div>
+    </div>
+    <div class="task-actions">
+      <button class="icon-btn" onclick="deleteTask('${t.id}')">🗑</button>
+    </div>
+  </div>`;
 }
 
 function renderWeek(){
@@ -417,7 +664,6 @@ function renderWeek(){
   html+=`</tbody></table></div>`;
   document.getElementById('weekGrid').innerHTML=html;
 
-  // Week bars
   const barsHTML=last7.map(d=>{
     const dt=dateObj(d);
     const names=['Su','Mo','Tu','We','Th','Fr','Sa'];
@@ -447,9 +693,7 @@ function renderAnalytics(){
   const sorted=[...habits].sort((a,b)=>rate(b.id,last30)-rate(a.id,last30));
   const best=sorted[0],worst=sorted[sorted.length-1];
   const maxStreak=Math.max(...habits.map(h=>calcStreak(h.id)));
-  const maxLongest=Math.max(...habits.map(h=>calcLongest(h.id)));
 
-  // Day of week
   const dayScores=Array(7).fill(0).map((_,di)=>{
     const dd=last30.filter(d=>dayOfWeek(d)===di);
     if(!dd.length)return 0;
@@ -461,18 +705,22 @@ function renderAnalytics(){
   const worstDay=dayScores.indexOf(Math.min(...dayScores));
   const dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-  // 30 day scores
   const daily30=last30.map(d=>{
     const done=habits.filter(h=>completions[d]?.[h.id]).length;
     return habits.length?Math.round(done/habits.length*100):0;
   });
 
-  // Insights
   const insights=[];
   if(overallAvg>=70)insights.push(`Excellent consistency! You're completing <strong>${overallAvg}%</strong> of your habits over the last 30 days.`);
   if(best&&worst&&best.id!==worst.id)insights.push(`Your strongest habit is <strong>${best.emoji} ${best.name}</strong> (${rate(best.id,last30)}%) — your most challenging is <strong>${worst.emoji} ${worst.name}</strong> (${rate(worst.id,last30)}%).`);
-  insights.push(`You perform best on <strong>${dayNames[bestDay]}s</strong> (${dayScores[bestDay]}% avg) and tend to slip on <strong>${dayNames[worstDay]}s</strong> (${dayScores[worstDay]}% avg). Focus extra effort on ${dayNames[worstDay]}s!`);
+  insights.push(`You perform best on <strong>${dayNames[bestDay]}s</strong> (${dayScores[bestDay]}% avg) and tend to slip on <strong>${dayNames[worstDay]}s</strong> (${dayScores[worstDay]}% avg).`);
   if(maxStreak>0)insights.push(`Your current best streak is <strong>${maxStreak} days</strong>. ${maxStreak>=7?'Incredible discipline! 🔥':'Keep the chain going!'}`);
+
+  // Task stats
+  const totalTasks=tasks.filter(t=>!t.deleted).length;
+  const doneTasks=tasks.filter(t=>!t.deleted&&t.doneDate).length;
+  const pendingTasks=getPendingTasks().length;
+  const carriedTasks=getPendingTasks().filter(t=>daysPending(t)>0).length;
 
   let html=`
   <div class="overall-card">
@@ -488,7 +736,7 @@ function renderAnalytics(){
     <div class="metric-card">
       <div class="metric-label">Best Day</div>
       <div class="metric-value">${dayNames[bestDay]}</div>
-      <div class="metric-sub">${dayScores[bestDay]}% avg completion</div>
+      <div class="metric-sub">${dayScores[bestDay]}% avg</div>
     </div>
     <div class="metric-card">
       <div class="metric-label">Top Streak</div>
@@ -498,18 +746,27 @@ function renderAnalytics(){
     ${best?`<div class="metric-card">
       <div class="metric-label">🏆 Top Habit</div>
       <div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:${best.color};margin:4px 0">${best.emoji} ${best.name}</div>
-      <div class="metric-sub">${rate(best.id,last30)}% completion rate</div>
+      <div class="metric-sub">${rate(best.id,last30)}% rate</div>
     </div>`:''}
     ${worst&&worst.id!==best?.id?`<div class="metric-card">
       <div class="metric-label">⚠️ Needs Work</div>
       <div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:${worst.color};margin:4px 0">${worst.emoji} ${worst.name}</div>
-      <div class="metric-sub">${rate(worst.id,last30)}% completion rate</div>
+      <div class="metric-sub">${rate(worst.id,last30)}% rate</div>
     </div>`:''}
   </div>
 
+  ${totalTasks>0?`<div class="card">
+    <div class="card-title">Task Overview</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      <div style="text-align:center"><div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:20px;color:var(--green)">${doneTasks}</div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);margin-top:2px">COMPLETED</div></div>
+      <div style="text-align:center"><div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:20px;color:var(--red)">${pendingTasks}</div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);margin-top:2px">PENDING</div></div>
+      <div style="text-align:center"><div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:20px;color:var(--gold)">${carriedTasks}</div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);margin-top:2px">CARRIED</div></div>
+    </div>
+  </div>`:''}
+
   <div class="card">
-    <div class="card-title">30-Day Trend</div>
-    <div class="trend-wrap">${daily30.map((v,i)=>`<div class="trend-bar" style="height:${Math.max(v,4)}%;background:${v>80?'#10B981':v>50?'#F59E0B':'#EF4444'};opacity:.8"></div>`).join('')}</div>
+    <div class="card-title">30-Day Habit Trend</div>
+    <div class="trend-wrap">${daily30.map(v=>`<div class="trend-bar" style="height:${Math.max(v,4)}%;background:${v>80?'#10B981':v>50?'#F59E0B':'#EF4444'};opacity:.8"></div>`).join('')}</div>
     <div class="trend-dates"><span>${last30[0].slice(5)}</span><span>Today</span></div>
   </div>
 
